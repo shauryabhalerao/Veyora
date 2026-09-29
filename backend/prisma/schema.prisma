@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  name          String
+  phone         String?
+  role          String   @default("user") // "user" | "admin" | "manager"
+  loyaltyPoints Int      @default(0)
+  referralCode  String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  orders        Order[]
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  name          String
+  brand         String   @default("Veyora")
+  gender        String   // "Women" | "Men" | "Kids"
+  category      String   // "Dresses" | "Tops" | "Kurtis" | "Shirts" | "Trousers" | etc.
+  subcategory   String?
+  price         Float
+  originalPrice Float?
+  discount      Int      @default(0)
+  rating        Float    @default(4.8)
+  reviewsCount  Int      @default(12)
+  inStock       Boolean  @default(true)
+  fabric        String?
+  fit           String?
+  care          String?
+  occasion      String?
+  image         String
+  images        String[]
+  tags          String[]
+  colors        Json     // Array of { name, hex }
+  sizes         String[] // Array of size strings ["S", "M", "L"]
+  isNewArrival  Boolean  @default(false)
+  isBestseller  Boolean  @default(false)
+  isFestive     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  orderNumber     String   @unique
+  userId          String?
+  user            User?    @relation(fields: [userId], references: [id])
+  totalAmount     Float
+  status          String   @default("Pending") // "Pending" | "Processing" | "Shipped" | "Delivered"
+  shippingAddress Json
+  paymentMethod   String
+  paymentStatus   String   @default("Paid")
+  giftWrap        Boolean  @default(false)
+  giftNote        String?
+  items           Json
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Coupon {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  discountPercent Int
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+}
