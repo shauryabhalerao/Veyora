@@ -42,6 +42,6 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', app: 'VEYORA API Server', version: '1.0.0', timestamp: new Date().toISOString() });
 });
 
-app.listen(PORT, () => {
-  console.log(`✨ VEYORA API Server running cleanly on http://localhost:${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✨ VEYORA API Server running on port ${PORT}`);
 });
