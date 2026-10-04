@@ -4,32 +4,46 @@ const router = express.Router();
 
 const mockProducts = [
   {
-    id: "w-01",
-    name: "The Column Dress",
+    id: "M001",
+    name: "Urban Plaid Overshirt",
     brand: "Veyora Studio",
-    gender: "Women",
-    category: "Dresses",
-    price: 3499,
-    originalPrice: 4299,
-    discount: 18,
-    rating: 4.9,
-    reviewsCount: 128,
-    inStock: true,
-    image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=1000&q=80"
-  },
-  {
-    id: "w-02",
-    name: "Structured Taupe Blazer",
-    brand: "Veyora Atelier",
-    gender: "Women",
-    category: "Co-ords",
-    price: 4499,
-    originalPrice: 5999,
+    gender: "Men",
+    category: "Men",
+    subcategory: "Jackets",
+    price: 1499,
+    originalPrice: 1999,
     discount: 25,
     rating: 4.8,
-    reviewsCount: 94,
-    inStock: true,
-    image: "https://images.unsplash.com/photo-1584273143981-41c073dfe8f8?auto=format&fit=crop&w=1000&q=80"
+    reviewsCount: 64,
+    inStock: true
+  },
+  {
+    id: "W001",
+    name: "Classic Black Long-Sleeve Top",
+    brand: "Veyora Studio",
+    gender: "Women",
+    category: "Women",
+    subcategory: "Tops",
+    price: 899,
+    originalPrice: 1199,
+    discount: 25,
+    rating: 4.8,
+    reviewsCount: 78,
+    inStock: true
+  },
+  {
+    id: "K001",
+    name: "Little Explorer Outfit",
+    brand: "Veyora Junior",
+    gender: "Kids",
+    category: "Kids",
+    subcategory: "Sets",
+    price: 899,
+    originalPrice: 1199,
+    discount: 25,
+    rating: 4.9,
+    reviewsCount: 42,
+    inStock: true
   }
 ];
 

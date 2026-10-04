@@ -141,17 +141,29 @@ export const CartPage = () => {
                   {/* Quantity Control & Price */}
                   <div className="flex items-center justify-between sm:justify-end gap-8 w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-[#E8E1D5]">
                     {/* - 1 + Pill Control matching image */}
-                    <div className="flex items-center border border-[#E8E1D5] bg-[#F5F0E6] rounded px-2 py-1">
+                    <div className="flex items-center border border-[#E8E1D5] bg-[#F5F0E6] rounded px-1.5 py-0.5">
                       <button
-                        onClick={() => updateQuantity(item.cartItemId, -1)}
-                        className="p-1 text-[#1C1917] hover:text-[#8C6D46] text-xs font-bold"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          updateQuantity(item.cartItemId || item.id, -1);
+                        }}
+                        className="w-7 h-7 flex items-center justify-center text-[#1C1917] hover:text-[#8C6D46] hover:bg-white rounded text-sm font-bold transition-all cursor-pointer select-none"
+                        aria-label="Deduct quantity"
                       >
                         -
                       </button>
-                      <span className="px-3 text-xs font-bold text-[#1C1917]">{item.quantity}</span>
+                      <span className="px-3 text-xs font-bold text-[#1C1917] min-w-[24px] text-center select-none">
+                        {item.quantity}
+                      </span>
                       <button
-                        onClick={() => updateQuantity(item.cartItemId, 1)}
-                        className="p-1 text-[#1C1917] hover:text-[#8C6D46] text-xs font-bold"
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          updateQuantity(item.cartItemId || item.id, 1);
+                        }}
+                        className="w-7 h-7 flex items-center justify-center text-[#1C1917] hover:text-[#8C6D46] hover:bg-white rounded text-sm font-bold transition-all cursor-pointer select-none"
+                        aria-label="Add quantity"
                       >
                         +
                       </button>

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Sparkles, X, ShoppingBag, RefreshCw, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Sparkles, X, ShoppingBag, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { initialProducts } from '../../data/catalog';
 import { useCart } from '../../context/CartContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useToast } from '../../context/ToastContext';
+import { apiClient } from '../../utils/apiClient';
 
 export const AIPersonalStylistModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -28,67 +29,42 @@ export const AIPersonalStylistModal = () => {
     "Smart office meeting look under ₹5000"
   ];
 
+  const [error, setError] = useState(null);
+
   const handleGenerateOutfit = async (e) => {
     if (e) e.preventDefault();
     if (!prompt.trim()) return;
 
     setLoading(true);
+    setError(null);
     setOutfitResult(null);
 
     try {
-      // Call Backend Gemini AI API if available, or fallback to smart local recommendation engine
-      const res = await fetch('/api/ai/stylist', {
+      // Call Backend Gemini AI API using apiClient
+      const data = await apiClient('/ai/stylist', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({
+          message: prompt,
+          prompt: prompt,
+          gender: prompt.toLowerCase().includes('men') ? 'men' : prompt.toLowerCase().includes('kids') ? 'kids' : 'women'
+        })
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      if (data && data.success !== false) {
         setOutfitResult(data);
       } else {
-        // Fallback intelligent simulation matching prompt keywords & budget
-        generateFallbackStylistResult(prompt);
+        const errorMsg = data?.error || data?.message || 'Failed to generate styling recommendation from Gemini AI.';
+        setError(errorMsg);
+        addToast(errorMsg, 'error');
       }
     } catch (err) {
-      console.warn("Using smart fallback stylist:", err);
-      generateFallbackStylistResult(prompt);
+      console.error("AI Stylist error:", err);
+      const networkErr = err.message || 'Unable to connect to backend AI server. Please check your connection and retry.';
+      setError(networkErr);
+      addToast(networkErr, 'error');
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateFallbackStylistResult = (userPrompt) => {
-    const lower = userPrompt.toLowerCase();
-    
-    // Select curated top, bottom, accessory matching catalog
-    let top = initialProducts.find(p => p.id === 'w-03') || initialProducts[0];
-    let bottom = initialProducts.find(p => p.id === 'w-04') || initialProducts[1];
-    let shoes = initialProducts.find(p => p.id === 'm-05') || initialProducts[4];
-
-    if (lower.includes('farewell') || lower.includes('classy') || lower.includes('dress')) {
-      top = initialProducts.find(p => p.id === 'w-01') || initialProducts[0];
-      bottom = initialProducts.find(p => p.id === 'w-06') || initialProducts[5]; // Tote Bag
-      shoes = initialProducts.find(p => p.id === 'm-05') || initialProducts[4];
-    } else if (lower.includes('men') || lower.includes('wedding')) {
-      top = initialProducts.find(p => p.id === 'm-03') || initialProducts[8];
-      bottom = initialProducts.find(p => p.id === 'm-02') || initialProducts[7];
-      shoes = initialProducts.find(p => p.id === 'm-05') || initialProducts[10];
-    }
-
-    const items = [top, bottom, shoes].filter(Boolean);
-    const totalPrice = items.reduce((acc, i) => acc + i.price, 0);
-
-    setOutfitResult({
-      title: "The Classy Farewell Silhouette",
-      items,
-      totalPrice,
-      whyItWorks: "This ensemble balances rich textures with fluid tailoring. The deep tones create an elongated classy frame, perfect for photo sessions and evening celebrations.",
-      alternatives: [
-        { name: "Pure Chanderi Silk Kurti Set", price: 2999, link: "/product/w-03" },
-        { name: "Structured Taupe Blazer", price: 4499, link: "/product/w-02" }
-      ]
-    });
   };
 
   const handleAddFullOutfitToCart = () => {
@@ -171,6 +147,21 @@ export const AIPersonalStylistModal = () => {
               <RefreshCw className="w-8 h-8 text-[#8C6D46] animate-spin mx-auto" />
               <h4 className="font-serif font-bold text-lg text-[#1C1917]">Curating catalog matching outfit...</h4>
               <p className="text-xs text-[#78716C]">Analyzing silhouette, budget limits, color theory and in-stock inventory...</p>
+            </div>
+          )}
+
+          {/* Error Message with Retry */}
+          {error && !loading && (
+            <div className="p-6 bg-rose-50 rounded-xl border border-rose-200 text-center space-y-3 shadow-soft">
+              <div className="text-rose-700 font-bold text-sm">AI Stylist Error</div>
+              <p className="text-xs text-rose-800 leading-relaxed">{error}</p>
+              <button
+                type="button"
+                onClick={handleGenerateOutfit}
+                className="px-4 py-2 bg-rose-900 text-white text-xs font-bold uppercase tracking-wider rounded hover:bg-rose-950 transition-colors inline-flex items-center gap-1.5"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Retry Request
+              </button>
             </div>
           )}
 

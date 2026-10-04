@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useToast } from '../context/ToastContext';
+import { apiClient } from '../utils/apiClient';
 
 export const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -49,17 +50,14 @@ export const CheckoutPage = () => {
     };
 
     try {
-      // Post to backend server API
-      const res = await fetch('/api/orders', {
+      // Post to backend server API using apiClient
+      const data = await apiClient('/orders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData)
       });
-      
-      const data = await res.json();
       console.log('Order created response:', data);
     } catch (err) {
-      console.warn('Backend server response fallback:', err);
+      console.warn('Backend server order placement warning:', err.message);
     }
 
     setTimeout(() => {

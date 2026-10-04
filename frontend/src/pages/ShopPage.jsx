@@ -27,15 +27,19 @@ export const ShopPage = () => {
   // Filter products dynamically
   const filteredProducts = useMemo(() => {
     return initialProducts.filter(p => {
-      if (selectedGender !== 'All' && p.gender !== selectedGender) return false;
-      if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
+      if (selectedGender !== 'All' && p.gender !== selectedGender && p.category !== selectedGender) return false;
+      if (selectedCategory !== 'All' && p.category !== selectedCategory && p.subcategory !== selectedCategory) return false;
       if (p.price > maxPrice) return false;
       if (selectedSizes.length > 0 && !p.sizes.some(s => selectedSizes.includes(s))) return false;
       if (collectionParam === 'festive' && !p.isFestive) return false;
       if (collectionParam === 'new' && !p.isNewArrival) return false;
       if (collectionParam === 'bestsellers' && !p.isBestseller) return false;
       if (collectionParam === 'sale' && p.discount === 0) return false;
-      if (searchParam && !p.name.toLowerCase().includes(searchParam.toLowerCase()) && !p.tags.some(t => t.toLowerCase().includes(searchParam.toLowerCase()))) return false;
+      if (searchParam && 
+          !p.name.toLowerCase().includes(searchParam.toLowerCase()) && 
+          !p.category.toLowerCase().includes(searchParam.toLowerCase()) && 
+          !(p.subcategory && p.subcategory.toLowerCase().includes(searchParam.toLowerCase())) && 
+          !p.tags.some(t => t.toLowerCase().includes(searchParam.toLowerCase()))) return false;
       return true;
     }).sort((a, b) => {
       if (sortBy === 'price-low') return a.price - b.price;
@@ -159,7 +163,7 @@ export const ShopPage = () => {
               >
                 All Categories
               </button>
-              {(selectedGender !== 'All' ? CATEGORIES_CONFIG[selectedGender] : ['Tops', 'Dresses', 'Shirts', 'Ethnic Wear', 'Jeans', 'Trousers', 'Hoodies', 'Accessories']).map((cat) => (
+              {(selectedGender !== 'All' ? CATEGORIES_CONFIG[selectedGender] : ['Tops', 'T-Shirts', 'Shirts', 'Dresses', 'Jeans', 'Trousers', 'Jackets', 'Co-ord Sets', 'Sets']).map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
@@ -192,7 +196,10 @@ export const ShopPage = () => {
           <div className="space-y-2 border-t border-[#E8E1D5] pt-4">
             <span className="text-xs font-bold uppercase tracking-wider text-[#1C1917] block">Size</span>
             <div className="flex flex-wrap gap-1.5">
-              {['XS', 'S', 'M', 'L', 'XL', 'XXL', '30', '32', '34', '8 UK'].map((sz) => (
+              {(selectedGender === 'Kids' 
+                ? ['2-3Y', '4-5Y', '6-7Y', '8-9Y', '10-11Y'] 
+                : ['XS', 'S', 'M', 'L', 'XL']
+              ).map((sz) => (
                 <button
                   key={sz}
                   onClick={() => toggleSizeFilter(sz)}

@@ -1,73 +1,199 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { apiClient } from '../utils/apiClient';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('veyora_user');
-    return saved ? JSON.parse(saved) : {
-      name: 'Eleanor Vance',
-      email: 'eleanor@veyora.com',
-      phone: '+91 98765 43210',
-      role: 'admin', // defaulted to admin so user can explore admin dashboard easily!
-      loyaltyPoints: 350,
-      referralCode: 'VEYORA-ELEANOR-98',
-      savedAddresses: [
-        {
-          id: 'addr-1',
-          name: 'Eleanor Vance',
-          street: '42 Marine Drive, Apt 7B',
-          city: 'Mumbai',
-          state: 'Maharashtra',
-          pincode: '400020',
-          phone: '+91 98765 43210',
-          isDefault: true
-        }
-      ],
-      sizeProfile: {
-        Women: { topSize: 'M', bottomSize: '28', bust: '36', waist: '28', hip: '38' },
-        Men: { shirtSize: 'L', trouserSize: '32', chest: '40' },
-        Kids: { ageGroup: '6-7Y' }
-      }
-    };
-  });
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(() => localStorage.getItem('veyora_token') || null);
+  const [loading, setLoading] = useState(true);
+  const [serverError, setServerError] = useState(null);
 
-  const [token, setToken] = useState(() => localStorage.getItem('veyora_token') || 'demo_jwt_token_secret');
+  // Clear authentication state and local storage credentials
+  const clearAuthState = useCallback(() => {
+    localStorage.removeItem('veyora_token');
+    localStorage.removeItem('veyora_user');
+    setToken(null);
+    setUser(null);
+  }, []);
+
+  // Initialize and verify authentication on app load
+  const initializeAuth = useCallback(async () => {
+    const savedToken = localStorage.getItem('veyora_token');
+
+    // Rule: veyora_token is the ONLY valid auth credential.
+    // If veyora_token does not exist, user is NOT authenticated.
+    if (!savedToken) {
+      clearAuthState();
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const data = await apiClient('/auth/me', { method: 'GET' });
+
+      if (data && data.success && data.user) {
+        setUser(data.user);
+        setToken(savedToken);
+        localStorage.setItem('veyora_user', JSON.stringify(data.user));
+        setServerError(null);
+      } else {
+        clearAuthState();
+      }
+    } catch (error) {
+      if (error.isNetworkError) {
+        setServerError('Unable to connect to the Veyora server. Please try again.');
+      } else if (error.status === 401 || error.status === 403) {
+        clearAuthState();
+        setServerError('Your session has expired. Please log in again.');
+      } else {
+        clearAuthState();
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [clearAuthState]);
 
   useEffect(() => {
-    if (user) {
-      localStorage.setItem('veyora_user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('veyora_user');
-    }
-  }, [user]);
+    initializeAuth();
 
-  const login = (userData, jwtToken) => {
-    setUser(userData);
-    setToken(jwtToken || 'demo_jwt_token_secret');
-    localStorage.setItem('veyora_token', jwtToken || 'demo_jwt_token_secret');
+    // Global listener for 401 Unauthorized events from apiClient
+    const handleUnauthorized = (e) => {
+      clearAuthState();
+      setServerError(e.detail?.message || 'Your session has expired. Please log in again.');
+    };
+
+    // Global listener for backend network failure
+    const handleBackendUnavailable = (e) => {
+      setServerError(e.detail?.message || 'Unable to connect to the Veyora server. Please try again.');
+    };
+
+    window.addEventListener('veyora-auth-unauthorized', handleUnauthorized);
+    window.addEventListener('veyora-backend-unavailable', handleBackendUnavailable);
+
+    return () => {
+      window.removeEventListener('veyora-auth-unauthorized', handleUnauthorized);
+      window.removeEventListener('veyora-backend-unavailable', handleBackendUnavailable);
+    };
+  }, [initializeAuth, clearAuthState]);
+
+  const login = async (email, password) => {
+    try {
+      setServerError(null);
+      const data = await apiClient('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!data || !data.success || !data.token) {
+        throw new Error(data?.message || 'Login failed. Please check your credentials.');
+      }
+
+      const { token: newToken, user: newUser } = data;
+      localStorage.setItem('veyora_token', newToken);
+      localStorage.setItem('veyora_user', JSON.stringify(newUser));
+      setToken(newToken);
+      setUser(newUser);
+      setServerError(null);
+
+      return { success: true, user: newUser };
+    } catch (error) {
+      if (error.isNetworkError) {
+        setServerError('Unable to connect to the Veyora server. Please try again.');
+      }
+      throw error;
+    }
+  };
+
+  const signup = async (signupData) => {
+    try {
+      setServerError(null);
+      const data = await apiClient('/auth/signup', {
+        method: 'POST',
+        body: JSON.stringify(signupData)
+      });
+
+      if (!data || !data.success || !data.token) {
+        throw new Error(data?.message || 'Signup failed. Please check your details.');
+      }
+
+      const { token: newToken, user: newUser } = data;
+      localStorage.setItem('veyora_token', newToken);
+      localStorage.setItem('veyora_user', JSON.stringify(newUser));
+      setToken(newToken);
+      setUser(newUser);
+      setServerError(null);
+
+      return { success: true, user: newUser };
+    } catch (error) {
+      if (error.isNetworkError) {
+        setServerError('Unable to connect to the Veyora server. Please try again.');
+      }
+      throw error;
+    }
+  };
+
+  const refreshUser = async () => {
+    const currentToken = token || localStorage.getItem('veyora_token');
+    if (!currentToken) {
+      clearAuthState();
+      return null;
+    }
+
+    try {
+      const data = await apiClient('/auth/me', { method: 'GET' });
+      if (data && data.success && data.user) {
+        setUser(data.user);
+        localStorage.setItem('veyora_user', JSON.stringify(data.user));
+        return data.user;
+      } else {
+        clearAuthState();
+        return null;
+      }
+    } catch (error) {
+      if (error.status === 401) {
+        clearAuthState();
+      }
+      return null;
+    }
   };
 
   const logout = () => {
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('veyora_token');
-    localStorage.removeItem('veyora_user');
+    const currentToken = token || localStorage.getItem('veyora_token');
+    if (currentToken) {
+      apiClient('/auth/logout', { method: 'POST' }).catch(() => {});
+    }
+
+    clearAuthState();
+    setServerError(null);
   };
 
   const updateUserProfile = (updatedFields) => {
-    setUser(prev => ({ ...prev, ...updatedFields }));
+    setUser(prev => {
+      if (!prev) return null;
+      const updated = { ...prev, ...updatedFields };
+      localStorage.setItem('veyora_user', JSON.stringify(updated));
+      return updated;
+    });
   };
 
-  const addAddress = (newAddress) => {
-    setUser(prev => ({
-      ...prev,
-      savedAddresses: [...(prev.savedAddresses || []), { ...newAddress, id: `addr-${Date.now()}` }]
-    }));
-  };
+  const clearServerError = () => setServerError(null);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, updateUserProfile, addAddress, isAdmin: user?.role === 'admin' }}>
+    <AuthContext.Provider value={{
+      user,
+      token,
+      loading,
+      serverError,
+      clearServerError,
+      login,
+      signup,
+      logout,
+      refreshUser,
+      updateUserProfile,
+      retryAuthInit: initializeAuth,
+      isAdmin: user?.role === 'admin'
+    }}>
       {children}
     </AuthContext.Provider>
   );

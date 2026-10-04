@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Upload, X, Sparkles, CheckCircle2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Camera, Upload, X, Sparkles, ShoppingBag } from 'lucide-react';
 import { initialProducts } from '../../data/catalog';
 import { useCart } from '../../context/CartContext';
 import { useCurrency } from '../../context/CurrencyContext';
 import { useToast } from '../../context/ToastContext';
+import { apiClient } from '../../utils/apiClient';
 
 export const AIFindLookModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,21 +65,19 @@ export const AIFindLookModal = () => {
     setMatchedLook(null);
 
     try {
-      // Send image to backend express server Gemini vision endpoint
-      const res = await fetch('/api/ai/find-look', {
+      // Send image to backend express server Gemini vision endpoint using apiClient
+      const data = await apiClient('/ai/find-look', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ image: imgData })
       });
 
-      if (res.ok) {
-        const data = await res.json();
+      if (data && data.products) {
         setMatchedLook(data);
       } else {
         fallbackVisualMatch(overrideIds);
       }
     } catch (err) {
-      console.warn("Using smart fallback visual search:", err);
+      console.warn("Using smart fallback visual search:", err.message);
       fallbackVisualMatch(overrideIds);
     } finally {
       setAnalyzing(false);
@@ -86,14 +85,14 @@ export const AIFindLookModal = () => {
   };
 
   const fallbackVisualMatch = (overrideIds) => {
-    const ids = overrideIds || ['w-02', 'w-05', 'w-04'];
+    const ids = overrideIds || ['W001', 'W005', 'M011'];
     const matchedProducts = ids.map(id => initialProducts.find(p => p.id === id)).filter(Boolean);
     const totalPrice = matchedProducts.reduce((acc, p) => acc + p.price, 0);
 
     setMatchedLook({
       analysis: {
-        identifiedItems: ["Beige Oversized Blazer", "Ribbed White Top", "Black Wide-Leg Trousers"],
-        dominantColors: ["Beige / Taupe", "Pure White", "Obsidian Black"],
+        identifiedItems: ["Classic Black Long-Sleeve Top", "Urban Cropped Jacket", "Wide-Leg Black Trousers"],
+        dominantColors: ["Obsidian Black", "Beige Taupe", "Jet Black"],
         styleCategory: "Smart Casual / Quiet Luxury"
       },
       products: matchedProducts,

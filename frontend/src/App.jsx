@@ -25,6 +25,11 @@ import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { LookbookPage } from './pages/LookbookPage';
 import { WishlistPage } from './pages/WishlistPage';
 
+import { LoginPage } from './pages/LoginPage';
+import { SignupPage } from './pages/SignupPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ProtectedRoute } from './routes/ProtectedRoute';
+
 import { AboutPage } from './pages/support/AboutPage';
 import { FAQPage } from './pages/support/FAQPage';
 
@@ -53,8 +58,25 @@ export default function App() {
                       <Route path="/cart" element={<CartPage />} />
                       <Route path="/checkout" element={<CheckoutPage />} />
                       <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
-                      <Route path="/account" element={<UserAccountPage />} />
-                      <Route path="/admin" element={<AdminDashboardPage />} />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route path="/signup" element={<SignupPage />} />
+                      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                      <Route 
+                        path="/account" 
+                        element={
+                          <ProtectedRoute>
+                            <UserAccountPage />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin" 
+                        element={
+                          <ProtectedRoute requireAdmin={true}>
+                            <AdminDashboardPage />
+                          </ProtectedRoute>
+                        } 
+                      />
                       <Route path="/lookbook" element={<LookbookPage />} />
                       <Route path="/wishlist" element={<WishlistPage />} />
                       <Route path="/about" element={<AboutPage />} />

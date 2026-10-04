@@ -73,9 +73,10 @@ export const CartProvider = ({ children }) => {
     }
 
     setCartItems(prev => {
-      const existing = prev.find(item => item.cartItemId === cartItemId);
+      const existing = prev.find(item => item.cartItemId === cartItemId || (item.id === product.id && item.selectedColor === colorName && item.selectedSize === sizeName));
       if (existing) {
-        return prev.map(item => item.cartItemId === cartItemId ? { ...item, quantity: item.quantity + quantity } : item);
+        const targetId = existing.cartItemId || existing.id;
+        return prev.map(item => (item.cartItemId === targetId || item.id === targetId) ? { ...item, quantity: item.quantity + quantity } : item);
       }
       return [
         ...prev,
@@ -88,7 +89,7 @@ export const CartProvider = ({ children }) => {
           selectedSize: sizeName,
           price: product.price,
           originalPrice: product.originalPrice,
-          quantity,
+          quantity: Math.max(1, quantity),
           image: itemImage
         }
       ];
@@ -96,13 +97,18 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = (cartItemId, delta) => {
-    setCartItems(prev => prev.map(item => {
-      if (item.cartItemId === cartItemId) {
-        const newQty = item.quantity + delta;
-        return newQty > 0 ? { ...item, quantity: newQty } : item;
-      }
-      return item;
-    }));
+    setCartItems(prev => {
+      return prev
+        .map(item => {
+          const isMatch = item.cartItemId === cartItemId || item.id === cartItemId;
+          if (isMatch) {
+            const newQty = item.quantity + delta;
+            return newQty > 0 ? { ...item, quantity: newQty } : null;
+          }
+          return item;
+        })
+        .filter(Boolean);
+    });
   };
 
   const removeFromCart = (cartItemId) => {

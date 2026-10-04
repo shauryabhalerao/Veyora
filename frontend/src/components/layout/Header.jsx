@@ -116,7 +116,7 @@ export const Header = () => {
           </Link>
 
           {/* User Account / Admin Badge */}
-          <Link to="/account" className="flex items-center gap-1.5 text-xs font-semibold text-[#1C1917] hover:text-[#8C6D46] transition-colors">
+          <Link to={user ? "/account" : "/login"} className="flex items-center gap-1.5 text-xs font-semibold text-[#1C1917] hover:text-[#8C6D46] transition-colors">
             <User className="w-5 h-5" />
             <span className="hidden lg:inline">{user ? user.name.split(' ')[0] : 'Login'}</span>
           </Link>

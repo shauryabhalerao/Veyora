@@ -13,7 +13,9 @@ export const FloatingAIAssistant = () => {
   const [input, setInput] = useState('');
   const { addToast } = useToast();
 
-  const handleSendMessage = (e) => {
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!input.trim()) return;
 
@@ -21,18 +23,23 @@ export const FloatingAIAssistant = () => {
     setMessages(prev => [...prev, { sender: 'user', text: userText }]);
     setInput('');
 
-    // Simulate AI response
-    setTimeout(() => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/ai/assistant`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userText })
+      });
+
+      const data = await res.json();
+      const reply = data.reply || "I am glad to assist with your Veyora luxury styling questions!";
+      setMessages(prev => [...prev, { sender: 'ai', text: reply }]);
+    } catch (err) {
       let aiReply = "I recommend pairing our Structured Taupe Blazer with High-Rise Wide-Leg Trousers and Suede Loafers for an effortless quiet luxury aesthetic.";
-      
       if (userText.toLowerCase().includes('size')) {
         aiReply = "Our silk column dresses run true to size. If you prefer a relaxed drape, we suggest ordering one size up!";
-      } else if (userText.toLowerCase().includes('return')) {
-        aiReply = "Veyora provides complimentary 7-day doorstep pickup returns and instant exchange for any size issues!";
       }
-
       setMessages(prev => [...prev, { sender: 'ai', text: aiReply }]);
-    }, 600);
+    }
   };
 
   return (

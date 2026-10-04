@@ -8,43 +8,43 @@ import { QuickViewModal } from '../components/ui/QuickViewModal';
 export const HomePage = () => {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
 
-  // Circular Categories matching exact reference screenshot!
+  // Circular Categories featuring real product assets
   const circularCategories = [
     {
       name: "Men",
-      itemsCount: "120+ Items",
-      image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?auto=format&fit=crop&w=300&q=80",
+      itemsCount: "11 Products",
+      image: initialProducts[0]?.image,
       link: "/shop?gender=Men"
     },
     {
       name: "Women",
-      itemsCount: "160+ Items",
-      image: "https://images.unsplash.com/photo-1595777457583-95e059d581b8?auto=format&fit=crop&w=300&q=80",
+      itemsCount: "11 Products",
+      image: initialProducts[11]?.image,
       link: "/shop?gender=Women"
     },
     {
-      name: "Bags",
-      itemsCount: "220+ Items",
-      image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=300&q=80",
-      link: "/shop?category=Accessories"
+      name: "Kids",
+      itemsCount: "8 Products",
+      image: initialProducts[22]?.image,
+      link: "/shop?gender=Kids"
     },
     {
-      name: "Shoes",
-      itemsCount: "140+ Items",
-      image: "https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&w=300&q=80",
-      link: "/shop?category=Accessories"
+      name: "Co-ords",
+      itemsCount: "2 Sets",
+      image: initialProducts[12]?.image,
+      link: "/shop?category=Co-ord Sets"
     },
     {
-      name: "Watches",
-      itemsCount: "210+ Items",
-      image: "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=300&q=80",
-      link: "/shop?category=Accessories"
+      name: "Shirts",
+      itemsCount: "5 Items",
+      image: initialProducts[1]?.image,
+      link: "/shop?category=Shirts"
     },
     {
-      name: "Accessories",
-      itemsCount: "320+ Items",
-      image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=300&q=80",
-      link: "/shop?category=Accessories"
+      name: "Dresses",
+      itemsCount: "4 Items",
+      image: initialProducts[17]?.image,
+      link: "/shop?category=Dresses"
     }
   ];
 
